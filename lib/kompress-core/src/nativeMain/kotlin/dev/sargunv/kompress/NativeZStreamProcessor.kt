@@ -52,7 +52,7 @@ internal class NativeZStreamProcessor(
   ): Boolean {
     input.usePinned { pinnedInput ->
       output.usePinned { pinnedOutput ->
-        stream.next_in = pinnedOutput.addressOf(startIndex)
+        stream.next_in = pinnedInput.addressOf(startIndex)
         stream.avail_in = (endIndex - startIndex).toUInt()
         var ended: Boolean
         do {
