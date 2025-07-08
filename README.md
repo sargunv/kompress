@@ -9,22 +9,21 @@
 Kompress is a WIP [Kotlin Multiplatform] library for compression and
 decompression of data. It will contain:
 
-- a pure Kotlin port of [zlib] `deflate` and `inflate`
-- a [kotlinx-io] friendly API for compressing/decompressing data
-- a zip archive reader and writer
-
-Kompress is a pure Kotlin library, so it is able to support all Kotlin
-Multiplatform targets.
+- a pure Kotlin port of [zlib] `deflate` and `inflate`.
+- platform-specific zlib wrappers as alternative implementations.
+- a [kotlinx-io] friendly API for streaming compression / decompression.
+- a zip archive reader and writer.
 
 **Status**
 
-- 🚧 zlib `inflate` has been ported
-  - basic tests are passing, but extensive testing has not been performed
-- 🚫 zlub `deflate` has not yet been ported
-- 🚧 a friendly API had been crafted on top
-  - Decompress is functional; compress is `TODO()`
-- 🚫 benchmarks and optimizations have not yet been performed
-- 🚫 zip archive support has not yet been implemented
+| API                               | Compress | Decompress |
+|-----------------------------------|----------|------------|
+| Common: pure Kotlin zlib port     | 🚫       | 🚧         |
+| JVM: `java.util.zip` wrapper      | ✅        | ✅          |
+| Native: `platform.zlib` wrapper   | 🚧       | 🚧         |
+| JS: `pako` or `node:zlib` wrapper | 🚫       | 🚫         |
+| Common: Zip reader                | 🚫       | 🚫         |
+| Common: Zip writer                | 🚫       | 🚫         |
 
 ## Usage
 
@@ -32,5 +31,7 @@ Multiplatform targets.
 - [API Reference](https://sargunv.github.io/kompress/api/)
 
 [Kotlin Multiplatform]: https://kotlinlang.org/docs/multiplatform.html
+
 [zlib]: https://www.zlib.net/
+
 [kotlinx-io]: https://github.com/Kotlin/kotlinx-io

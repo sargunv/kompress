@@ -83,6 +83,7 @@ internal class NativeZStreamProcessor(
 
   override fun close() {
     reset(stream).requireSuccess()
+    // TODO reset and autoclean instead of free
     nativeHeap.free(stream.rawPtr)
     isFreed = true
   }
