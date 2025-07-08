@@ -20,7 +20,7 @@ decompression of data. It will contain:
 |-----------------------------------|----------|------------|
 | Common: pure Kotlin zlib port     | 🚫       | 🚧         |
 | JVM: `java.util.zip` wrapper      | ✅        | ✅          |
-| Native: `platform.zlib` wrapper   | 🚧       | 🚧         |
+| Native: `platform.zlib` wrapper   | ✅        | ✅          |
 | JS: `pako` or `node:zlib` wrapper | 🚫       | 🚫         |
 | Common: Zip reader                | 🚫       | 🚫         |
 | Common: Zip writer                | 🚫       | 🚫         |

@@ -1,8 +1,8 @@
 package dev.sargunv.kompress
 
-import dev.sargunv.kompress.zlib.Flush
 import dev.sargunv.kompress.zlib.ReturnCode
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.UnsafeNumber
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.nativeHeap
@@ -13,7 +13,7 @@ import platform.zlib.z_stream
 @OptIn(ExperimentalForeignApi::class)
 internal class NativeZStreamProcessor(
   init: (stream: z_stream) -> Int,
-  private val process: (stream: z_stream, flush: UInt) -> Int,
+  private val process: (stream: z_stream, finish: Boolean) -> Int,
   private val reset: (stream: z_stream) -> Int,
   chunkSize: Int = 8192,
 ) : Compressor, Decompressor {
@@ -43,6 +43,7 @@ internal class NativeZStreamProcessor(
     init(stream).requireSuccess()
   }
 
+  @OptIn(UnsafeNumber::class)
   override fun push(
     input: UByteArray,
     startIndex: Int,
@@ -54,27 +55,30 @@ internal class NativeZStreamProcessor(
       output.usePinned { pinnedOutput ->
         stream.next_in = pinnedInput.addressOf(startIndex)
         stream.avail_in = (endIndex - startIndex).toUInt()
+
         var ended: Boolean
         do {
           stream.next_out = pinnedOutput.addressOf(0)
           stream.avail_out = output.size.toUInt()
 
+          val ret = process(stream, finish).requireSuccess()
           ended =
-            when (
-              process(stream, if (finish) Flush.Z_FINISH.value else Flush.Z_NO_FLUSH.value)
-                .requireSuccess()
-            ) {
+            when (ret) {
               ReturnCode.Z_OK -> false
               ReturnCode.Z_STREAM_END -> true
-              ReturnCode.Z_NEED_DICT -> throw ZStreamException(ReturnCode.Z_NEED_DICT, null)
+              ReturnCode.Z_NEED_DICT ->
+                throw ZStreamException(
+                  ReturnCode.Z_NEED_DICT,
+                  "need dictionary (DICTID=${stream.adler})",
+                )
               else -> error("impossible")
             }
 
           val bytesWritten = output.size.toUInt() - stream.avail_out
           onOutput(output, 0, bytesWritten.toInt())
 
-          val outputFilled = stream.avail_out == 0u
           val inputEmpty = stream.avail_in == 0u
+          val outputFilled = stream.avail_out == 0u
         } while ((outputFilled || !inputEmpty) && !ended)
         return ended
       }

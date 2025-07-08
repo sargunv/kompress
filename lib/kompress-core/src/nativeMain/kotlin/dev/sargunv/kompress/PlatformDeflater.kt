@@ -3,9 +3,11 @@
 package dev.sargunv.kompress
 
 import dev.sargunv.kompress.zlib.MemLevel
-import dev.sargunv.kompress.zlib.Method
-import dev.sargunv.kompress.zlib.Strategy
 import kotlinx.cinterop.ptr
+import platform.zlib.Z_DEFAULT_STRATEGY
+import platform.zlib.Z_DEFLATED
+import platform.zlib.Z_FINISH
+import platform.zlib.Z_NO_FLUSH
 import platform.zlib.deflate
 import platform.zlib.deflateInit2
 import platform.zlib.deflateReset
@@ -16,12 +18,12 @@ public actual class PlatformDeflater actual constructor(level: Int, format: Form
       deflateInit2(
         strm = stream.ptr,
         level = level,
-        method = Method.Z_DEFLATED.value.toInt(),
+        method = Z_DEFLATED,
         windowBits = format.windowBits,
         memLevel = MemLevel.DEFAULT_MEMLEVEL,
-        strategy = Strategy.Z_DEFAULT_STRATEGY.value.toInt(),
+        strategy = Z_DEFAULT_STRATEGY,
       )
     },
-    process = { stream, flush -> deflate(stream.ptr, flush.toInt()) },
+    process = { stream, finish -> deflate(stream.ptr, if (finish) Z_FINISH else Z_NO_FLUSH) },
     reset = { stream -> deflateReset(stream.ptr) },
   )

@@ -1,5 +1,6 @@
 package dev.sargunv.kompress
 
+import dev.sargunv.kompress.zlib.Flush
 import dev.sargunv.kompress.zlib.InflateStream
 import dev.sargunv.kompress.zlib.ReturnCode
 import dev.sargunv.kompress.zlib.ReturnCode.*
@@ -25,7 +26,7 @@ internal fun testInflate(hex: String, wbits: Int, status: ReturnCode, msg: Strin
     ZStreamProcessor(
         new = { InflateStream() },
         init = { inflateInit2(windowBits = wbits) },
-        process = { inflate(it) },
+        process = { _ -> inflate(Flush.Z_NO_FLUSH) },
         reset = { inflateReset() },
       )
       .use { inflater ->
