@@ -103,6 +103,10 @@ public class InflateState : State {
 
   /** Current inflate mode */
   internal var mode: InflateMode = HEAD
+    set(value) {
+      println(mode)
+      field = value
+    }
 
   /** True if processing last block */
   internal var last: Boolean = false
@@ -356,12 +360,11 @@ public fun InflateStream.inflateInit2(windowBits: Int = WindowBits.DEF_WBITS): R
 
 public fun InflateStream.inflateInit(): ReturnCode = inflateInit2()
 
-@Suppress("NOTHING_TO_INLINE", "LocalVariableName")
+@Suppress("LocalVariableName")
 public fun InflateStream.inflate(flush: Flush): ReturnCode {
   val state = this.validState ?: return Z_STREAM_ERROR
   val output = output ?: return Z_STREAM_ERROR
   val input = input ?: return Z_STREAM_ERROR
-  //  if (input == null && this.avail_in != 0u) return Z_STREAM_ERROR
 
   var put = 0u
   var left = 0u
@@ -611,14 +614,12 @@ public fun InflateStream.inflate(flush: Flush): ReturnCode {
         if (have == 0u) break@loop
 
         copy = 0u
-        state.head?.name = ByteStringBuilder()
+        state.head?.let { if (it.name == null) it.name = ByteStringBuilder() }
         do {
           len = input[(next + copy++).toInt()].toUInt()
-          state.head?.let { head ->
-            /* use constant limit because we do not preallocate memory */
-            if (len != 0u && state.length < UShort.MAX_VALUE /*state.head.name_max*/)
-              state.head?.name!!.append(len.toUByte())
-          }
+          /* use constant limit because we do not preallocate memory */
+          if (len != 0u && state.length < UShort.MAX_VALUE /*state.head.name_max*/)
+            state.head?.name?.append(len.toUByte())
         } while (len != 0u && copy < have)
 
         if (state.flags.fhcrc && state.wrap.validate)
@@ -638,14 +639,12 @@ public fun InflateStream.inflate(flush: Flush): ReturnCode {
         if (have == 0u) break@loop
 
         copy = 0u
-        state.head?.name = ByteStringBuilder()
+        state.head?.let { if (it.comment == null) it.comment = ByteStringBuilder() }
         do {
           len = input[(next + copy++).toInt()].toUInt()
-          state.head?.let { head ->
-            /* use constant limit because we do not preallocate memory */
-            if (len != 0u && state.length < UShort.MAX_VALUE /*state.head.comm_max*/)
-              state.head?.name!!.append(len.toUByte())
-          }
+          /* use constant limit because we do not preallocate memory */
+          if (len != 0u && state.length < UShort.MAX_VALUE /*state.head.comm_max*/)
+            state.head?.comment?.append(len.toUByte())
         } while (len != 0u && copy < have)
 
         if (state.flags.fhcrc && state.wrap.validate)
@@ -653,9 +652,7 @@ public fun InflateStream.inflate(flush: Flush): ReturnCode {
 
         have -= copy
         next += copy
-        if (len != 0u) {
-          break@loop
-        }
+        if (len != 0u) break@loop
       } else state.head?.comment = null
       state.mode = HCRC
       /* falls through */
@@ -1072,9 +1069,7 @@ public fun InflateStream.inflate(flush: Flush): ReturnCode {
         from = put - state.offset
         copy = state.length
       }
-      if (copy > left) {
-        copy = left
-      }
+      if (copy > left) copy = left
       left -= copy
       state.length -= copy
       do {
